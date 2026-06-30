@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FROG X Text Style Studio Pro (Light Edition)</title>
+    <meta name="description" content="Premium Light Glassmorphism Text Generator, Decorator & Glitch Engine">
+    <meta name="theme-color" content="#f8f9fa">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-base: #f3f4f6;
+            --neon-purple: #8a2be2;
+            --neon-blue: #00a8ff;
+            --neon-pink: #ff007f;
+            --neon-green: #00b34a;
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(0, 0, 0, 0.08);
+            --glass-hover: rgba(0, 0, 0, 0.04);
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --font-ui: 'Outfit', sans-serif;
+            --font-code: 'Fira Code', monospace;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+        ::-webkit-scrollbar-thumb { background: rgba(138, 43, 226, 0.3); border-radius: 10px; transition: 0.3s; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-purple); }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Ambient Pastel Glows for Light Theme */
+        body::before, body::after {
+            content: ''; position: fixed; width: 45vw; height: 45vw; border-radius: 50%; filter: blur(140px); z-index: -2; opacity: 0.2; pointer-events: none;
+        }
+        body::before { background: var(--neon-purple); top: -10%; left: -10%; }
+        body::after { background: var(--neon-blue); bottom: -10%; right: -10%; }
+
+        #canvas-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+
+        .app-shell { max-width: 1280px; margin: 0 auto; padding: 20px 16px 80px; }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center; padding: 16px 24px;
+            background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); border-radius: 20px; margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        }
+
+        .brand { display: flex; align-items: center; gap: 12px; font-weight: 900; font-size: 1.4rem; letter-spacing: -0.5px; }
+        .brand span { background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .badge { font-size: 0.65rem; background: rgba(138,43,226,0.1); border: 1px solid var(--neon-purple); padding: 3px 8px; border-radius: 20px; font-family: var(--font-code); color: var(--neon-purple); }
+
+        .header-actions { display: flex; gap: 10px; }
+        .btn-icon { background: rgba(0,0,0,0.03); border: 1px solid var(--glass-border); color: var(--text-main); width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+        .btn-icon:hover { background: var(--glass-hover); border-color: var(--neon-purple); transform: translateY(-2px); }
+
+        /* Hero Input Section */
+        .hero-panel {
+            background: var(--glass-bg); backdrop-filter: blur(24px); border: 1px solid var(--glass-border);
+            border-radius: 24px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 24px; position: sticky; top: 16px; z-index: 100;
+        }
+
+        .input-wrapper { position: relative; width: 100%; }
+        textarea#mainInput {
+            width: 100%; height: 90px; background: rgba(255,255,255,0.7); border: 1.5px solid rgba(0,0,0,0.08);
+            border-radius: 16px; padding: 16px; color: var(--text-main); font-size: 1.35rem; font-family: var(--font-ui); font-weight: 600;
+            resize: none; outline: none; transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        textarea#mainInput:focus { border-color: var(--neon-purple); box-shadow: 0 0 25px rgba(138,43,226,0.15); }
+        textarea#mainInput::placeholder { color: rgba(0,0,0,0.3); font-weight: 400; }
+
+        /* Live Counter Bar */
+        .live-counter-bar {
+            display: flex; justify-content: flex-end; gap: 14px; font-size: 0.8rem; color: var(--text-muted);
+            margin-top: 6px; padding: 0 4px; font-family: var(--font-code); font-weight: 600;
+        }
+
+        .quick-toolbar { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; flex-wrap: wrap; gap: 10px; }
+        .tools-left, .tools-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap;}
+        
+        .btn-sm {
+            background: rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.05); color: var(--text-muted);
+            padding: 8px 14px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-sm:hover { color: var(--text-main); background: rgba(0,0,0,0.08); }
+        .btn-glow { background: linear-gradient(135deg, var(--neon-purple), #4a00e0); color: #fff; border: none; box-shadow: 0 4px 15px rgba(138,43,226,0.3); }
+        .btn-glow:hover { box-shadow: 0 6px 20px rgba(138,43,226,0.4); transform: scale(1.02); color: #fff; }
+
+        /* Navigation Tabs */
+        .nav-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 20px; scrollbar-width: none; }
+        .nav-tabs::-webkit-scrollbar { display: none; }
+        .tab {
+            padding: 12px 20px; background: rgba(0,0,0,0.02); border: 1px solid transparent; border-radius: 14px;
+            color: var(--text-muted); font-weight: 600; font-size: 0.95rem; white-space: nowrap; cursor: pointer; transition: all 0.2s;
+        }
+        .tab.active { background: rgba(138,43,226,0.1); border-color: var(--neon-purple); color: var(--neon-purple); box-shadow: inset 0 0 12px rgba(138,43,226,0.05); }
+
+        /* Filter & Search Bar */
+        .filter-section { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .search-box { flex: 1; min-width: 240px; position: relative; }
+        .search-box i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+        .search-box input {
+            width: 100%; height: 46px; background: var(--glass-bg); border: 1px solid var(--glass-border);
+            border-radius: 14px; padding: 0 16px 0 44px; color: var(--text-main); outline: none; font-family: var(--font-ui);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .search-box input:focus { border-color: var(--neon-blue); }
+
+        .cat-pills { display: flex; gap: 6px; overflow-x: auto; width: 100%; padding-bottom: 6px; scrollbar-width: none; }
+        .cat-pill { padding: 8px 16px; background: rgba(0,0,0,0.04); border: 1px solid var(--glass-border); border-radius: 20px; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; transition: 0.2s; }
+        .cat-pill.active { background: var(--text-main); color: #fff; font-weight: 700; }
+
+        /* Section Viewports */
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeIn 0.3s ease; }
+
+        /* Styles Grid */
+        .styles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+
+        .style-card {
+            background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 18px; padding: 18px;
+            position: relative; display: flex; flex-direction: column; justify-content: space-between; min-height: 110px;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; backdrop-filter: blur(16px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        }
+        .style-card:hover { 
+            transform: translateY(-3px); 
+            border-color: rgba(138, 43, 226, 0.3); 
+            box-shadow: 0 10px 30px rgba(138, 43, 226, 0.1), 0 4px 15px rgba(0,0,0,0.02); 
+        }
+        
+        .card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .style-name { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--neon-purple); font-weight: 700; }
+        .card-actions { display: flex; gap: 8px; align-items: center; }
+        .action-ico { color: var(--text-muted); cursor: pointer; font-size: 0.9rem; padding: 4px; transition: color 0.2s; }
+        .action-ico:hover { color: var(--text-main); }
+        .action-ico.fav-active { color: var(--neon-pink); }
+        .action-ico.wa-share { color: #25d366; font-size: 1rem; }
+        .action-ico.wa-share:hover { transform: scale(1.15); }
+
+        .rendered-text { font-size: 1.25rem; word-break: break-all; color: var(--text-main); flex-grow: 1; display: flex; align-items: center; font-family: var(--font-ui); cursor: pointer; }
+
+        /* Symbols Grid */
+        .symbols-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; }
+        .sym-btn {
+            height: 60px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 14px;
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; transition: 0.2s; color: var(--text-main);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .sym-btn:hover { border-color: var(--neon-purple); transform: scale(1.1); background: rgba(138,43,226,0.05); box-shadow: 0 0 15px rgba(138,43,226,0.1); }
+
+        /* Tools View */
+        .tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+        .tool-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .tool-card h3 { margin-bottom: 16px; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; color: var(--neon-purple); }
+        .tool-field { width: 100%; background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.08); padding: 12px; border-radius: 12px; color: var(--text-main); margin-bottom: 12px; outline: none; font-family: var(--font-ui); }
+        .tool-field:focus { border-color: var(--neon-purple); }
+
+        /* Theme Option Selectors for Exporter */
+        .theme-selector { display: flex; gap: 8px; margin: 12px 0; justify-content: center; }
+        .theme-dot { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
+        .theme-dot.active { border-color: #000; transform: scale(1.15); }
+
+        /* Toast & Modals */
+        #toast {
+            position: fixed; bottom: 24px; right: 24px; background: #ffffff;
+            border: 1px solid var(--neon-blue); color: var(--text-main); padding: 14px 22px; border-radius: 16px; font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px; z-index: 1000;
+            transform: translateY(150%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #toast.show { transform: translateY(0); }
+
+        .modal-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.7); backdrop-filter: blur(8px);
+            z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal { background: #ffffff; border: 1px solid var(--neon-purple); border-radius: 24px; width: 100%; max-width: 500px; padding: 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        canvas#renderCanvas { width: 100%; border-radius: 12px; border: 1px solid rgba(0,0,0,0.08); margin: 16px 0; background: #f9fafb; }
+
+        /* Loading Splash */
+        #splash {
+            position: fixed; top:0; left:0; width:100%; height:100%; background: #f3f4f6; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease;
+        }
+        .loader-ring { width: 80px; height: 80px; border: 3px solid transparent; border-top-color: var(--neon-blue); border-bottom-color: var(--neon-purple); border-radius: 50%; animation: spin 1s linear infinite; }
+        
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 640px) {
+            .hero-panel { padding: 16px; top: 8px; }
+            textarea#mainInput { font-size: 1.15rem; height: 75px; }
+            .styles-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="splash">
+        <div class="loader-ring"></div>
+        <h2 style="margin-top: 20px; font-weight: 800; letter-spacing: 4px; font-size: 0.9rem; color: var(--text-muted);">INITIALIZING FROG X ENGINE LIGHT PRO</h2>
+    </div>
+
+    <canvas id="canvas-bg"></canvas>
+
+    <div class="app-shell">
+        <header>
+            <div class="brand">
+                <i class="fa-solid fa-layer-group" style="color: var(--neon-purple);"></i>
+                <div>FROG X <span>STUDIO</span></div>
+                <div class="badge">PRO v2.0 Light</div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" id="installPWA" title="Install App to Phone" style="display:none;"><i class="fa-solid fa-mobile-screen-button" style="color: var(--neon-purple);"></i></button>
+            </div>
+        </header>
+
+        <section class="hero-panel">
+            <div class="input-wrapper">
+                <textarea id="mainInput" placeholder="Type anything to stylize..." autofocus></textarea>
+            </div>
+            <div class="live-counter-bar">
+                <span>Chars: <b id="charCount" style="color: var(--neon-blue);">0</b></span>
+                <span>Words: <b id="wordCount" style="color: var(--neon-purple);">0</b></span>
+            </div>
+            <div class="quick-toolbar">
+                <div class="tools-left">
+                    <button class="btn-sm" onclick="clearText()"><i class="fa-solid fa-rotate-left"></i> Clear</button>
+                    <button class="btn-sm" onclick="pasteText()"><i class="fa-regular fa-clipboard"></i> Paste</button>
+                    <button class="btn-sm" onclick="insertInvisible()"><i class="fa-solid fa-ghost"></i> Blank Char</button>
+                </div>
+                <div class="tools-right">
+                    <button class="btn-sm btn-glow" onclick="randomizeText()"><i class="fa-solid fa-wand-magic-sparkles"></i> Lucky Style</button>
+                </div>
+            </div>
+        </section>
+
+        <nav class="nav-tabs">
+            <div class="tab active" onclick="switchTab('styles')"><i class="fa-solid fa-wand-magic-sparkles"></i> Generator (160+)</div>
+            <div class="tab" onclick="switchTab('symbols')"><i class="fa-solid fa-omega"></i> Unicode Library</div>
+            <div class="tab" onclick="switchTab('tools')"><i class="fa-solid fa-toolbox"></i> Mini Tools</div>
+            <div class="tab" onclick="switchTab('favs')"><i class="fa-solid fa-heart"></i> Favorites (<span id="favCount">0</span>)</div>
+        </nav>
+
+        <div id="view-styles" class="view-section active">
+            <div class="filter-section">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="searchStyles" placeholder="Search by name or tag (e.g. sigma, gothic, tiktok)...">
+                </div>
+            </div>
+            <div class="cat-pills" id="categoryPills"></div>
+            <div style="margin: 16px 0 8px; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;" id="resultsMeta">Showing all styles</div>
+            <div class="styles-grid" id="stylesGrid"></div>
+        </div>
+
+        <div id="view-symbols" class="view-section">
+            <div class="cat-pills" id="symCategories" style="margin-bottom:16px;"></div>
+            <div class="symbols-grid" id="symbolsGrid"></div>
+        </div>
+
+        <div id="view-tools" class="view-section">
+            <div class="tools-grid">
+                <div class="tool-card">
+                    <h3><i class="fa-solid fa-biohazard"></i> Zalgo Glitch Text</h3>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">Inject hyper-glitched unicode corruptions into text.</p>
+                    <button class="btn-sm btn-glow" style="width:100%; justify-content:center;" onclick="applyZalgoGlitch()">Glitch Live Text & Copy</button>
+                </div>
+
+                <div class="tool-card">
+                    <h3><i class="fa-solid fa-copy"></i> Text Repeater</h3>
+                    <input type="text" id="repText" class="tool-field" placeholder="Text to repeat...">
+                    <input type="number" id="repCount" class="tool-field" placeholder="Count (e.g. 50)" min="1" max="1000" value="10">
+                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">
+                        <input type="checkbox" id="repNewline" checked> Put on new lines
+                    </label>
+                    <button class="btn-sm btn-glow" style="width:100%; justify-content:center;" onclick="runRepeater()">Generate & Copy</button>
+                </div>
+
+                <div class="tool-card">
+                    <h3><i class="fa-solid fa-font"></i> Case Manipulator</h3>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <button class="btn-sm" onclick="convertCase('upper')">UPPERCASE</button>
+                        <button class="btn-sm" onclick="convertCase('lower')">lowercase</button>
+                        <button class="btn-sm" onclick="convertCase('title')">Title Case</button>
+                        <button class="btn-sm" onclick="convertCase('alt')">aLtErNaTiNg</button>
+                        <button class="btn-sm" style="grid-column: span 2;" onclick="convertCase('inv')">iNVERSE cASE</button>
+                    </div>
+                </div>
+
+                <div class="tool-card">
+                    <h3><i class="fa-solid fa-pen-nib"></i> Custom Wing Builder</h3>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="wingLeft" class="tool-field" value="꧁༒•" placeholder="Left">
+                        <input type="text" id="wingRight" class="tool-field" value="•༒꧂" placeholder="Right">
+                    </div>
+                    <button class="btn-sm btn-glow" style="width:100%; justify-content:center;" onclick="applyCustomWings()">Apply to Live Text</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-favs" class="view-section">
+            <div class="styles-grid" id="favsGrid"></div>
+        </div>
+    </div>
+
+    <div id="toast"><i class="fa-solid fa-circle-check" style="color:var(--neon-blue)"></i> <span id="toastMsg">Copied to clipboard</span></div>
+
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal">
+            <h3 style="margin-bottom:8px;">Export High-Res Card</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted)">Choose ambient theme gradient:</p>
+            
+            <div class="theme-selector">
+                <div class="theme-dot active" style="background: linear-gradient(135deg, #ffffff, #e2e8f0);" onclick="changeCanvasTheme(0, this)"></div>
+                <div class="theme-dot" style="background: linear-gradient(135deg, #fff5f5, #fed7d7);" onclick="changeCanvasTheme(1, this)"></div>
+                <div class="theme-dot" style="background: linear-gradient(135deg, #f0fff4, #c6f6d5);" onclick="changeCanvasTheme(2, this)"></div>
+            </div>
+
+            <canvas id="renderCanvas" width="800" height="400"></canvas>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button class="btn-sm" onclick="closeModal()">Cancel</button>
+                <button class="btn-sm btn-glow" onclick="downloadCanvas()">Download PNG</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* --- 1. CORE UNICODE GENERATOR ENGINE --- */
+        const CHARS_NORMAL = [...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'];
+        
+        const ALPHABETS = {
+            mono:        [...'𝚊𝚋𝚌𝚍𝚎𝚏𝚐𝚑𝚒𝚓𝚔𝚕𝚖𝚗𝚘𝚙𝚚𝚛𝚜𝚝𝚞𝚟𝚠𝚡𝚢𝚣𝙰𝙱𝙲𝙳𝙴𝙵𝙶𝙷𝙸𝙹𝙺𝙻𝙼𝙽𝙾𝙿𝚀𝚁𝚂𝚃𝚄𝚅𝚆𝚇𝚈𝚉𝟶𝟷𝟸𝟹𝟺𝟻𝟼𝟽𝟾𝟿'],
+            bold:        [...'𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳𝐀𝐁𝐂𝐃𝐄split𝐉𝐊model𝐍block𝐐𝐑𝐒block𝚄blockblockblock𝟎𝟏𝟐𝟑𝟒𝟓𝟔𝟕𝟖𝟗'],
+            italic:      [...'𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧𝐴𝐵𝐶model𝐹model𝐻modelmodelmodelmodelmodelmodelmodelmodelmodelmodel0123456789'],
+            boldItalic:  [...'𝒂𝒃𝒄𝒅𝒆𝒇𝒈𝒉𝒊𝒋𝒌𝒍mapping𝒐𝒑𝒒𝒓𝒔𝒕𝒖𝒗𝒘𝒙𝒚𝒛mappingmappingmappingmappingmappingmappingmappingmappingmappingmapping0123456789'],
+            script:      [...'𝒶𝒷𝒸handle𝑒𝒻𝑔𝒽𝒾𝒿handle𝓁𝓂handle𝑜𝓅𝓆𝓇𝓈𝓉𝓊𝓋𝓌𝓍𝓎𝓏0123456789'],
+            boldScript:  [...'𝓪𝓫𝓬𝓭𝓮𝓯𝓰𝓱𝓲𝓳𝓴𝓵𝓶𝓷𝓸𝓹𝓺𝓻𝓼𝓽𝓾𝓿𝔀𝔁𝔂𝔃0123456789'],
+            gothic:      [...'𝔞𝔟𝔠𝔡𝔢𝔣𝔤𝔥𝔦𝔧𝔨𝔩𝔪𝔫𝔬𝔭𝔮𝔯𝔰𝔱𝔲𝔳𝔴𝔵𝔶𝔷0123456789'],
+            boldGothic:  [...'𝖆𝖇𝖈𝖉𝖊𝖋𝖌𝖍𝖎𝖏𝖐𝖑𝖒𝖓𝖔𝖕𝖖𝖗𝖘𝖙𝒖𝖛𝖜𝖝𝖞𝖟0123456789'],
+            doubleStruck:[...'𝕒𝕓𝕔𝕕𝕖𝕗𝕘𝕙𝕚𝕛𝕜𝕝𝕞𝕟𝕠𝕡𝕢𝕣𝕤𝕥𝕦𝕧𝕨𝕩𝕪𝕫0123456789'],
+            sans:        [...'𝖺𝖼𝖽𝖾𝖿𝗀𝗁𝗂𝗃𝗄Target𝗆𝗇𝗈𝗉𝗊𝗋𝗌𝗍𝗎𝗏𝗐𝗑𝗒𝗓0123456789'],
+            boldSans:    [...'𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘄𝘅𝘆𝘇0123456789'],
+            italicSans:  [...'𝘢𝘣𝘤𝘥copyf𝘨𝘩𝘪𝘫𝘬𝘭𝘮𝘯𝘰𝘱𝘲𝘳𝘴𝘵🇺𝘷𝘸𝘹𝘺𝘻0123456789'],
+            bubble:      [...'ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩ①②③④⑤⑥⑦⑧⑨⓪'],
+            bubbleDark:  [...'🅐🅑🅒🅓🅔🅕🅖🅗🅘🅙🅚🅛🅜🅝🅞🅟🅠🅡🅢🅣🅤🅥🅦🅧🅨🅩❶❷❸❹❺❻❼❽❾⓪'],
+            square:      [...'🄰🄱🄲🄳🄴🄵🄶🄷🄰🄹🄺🄻🄼🄽🄾🄿🅀🅁🅂🅃🅄🅅🅆🅇🅈🅉0123456789'],
+            smallCaps:   [...'ᴀʙᴄresourceᴇғɢʜɪᴊresourceʟᴍɴresourceᴘǫʀsᴛᴜᴠᴡxʏᴢ0123456789'],
+            fullWidth:   [...'ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ０１２３４５６７８９']
+        };
+
+        Object.keys(ALPHABETS).forEach(k => {
+            if (ALPHABETS[k].length < 62) {
+                let current = ALPHABETS[k];
+                let missing = 62 - current.length;
+                for(let idx=0; idx<missing; idx++) current.push(CHARS_NORMAL[62-missing+idx] || '');
+            }
+        });
+
+        const WRAPPERS = [
+            { name: "Plain", pre: "", post: "", cat: "aesthetic" },
+            { name: "Sigma", pre: "🗿 「 ", post: " 」 🗿", cat: "sigma" },
+            { name: "Alpha Boss", pre: "『⚡ ", post: " ⚡』", cat: "alpha" },
+            { name: "Cyber Root", pre: "[root@void:~]$ ", post: "", cat: "hacker" },
+            { name: "Star Sniper", pre: "★彡[ ", post: " ]彡★", cat: "gaming" },
+            { name: "Angel Wings", pre: "꧁•⊹٭ ", post: " ٭⊹•꧂", cat: "cute" },
+            { name: "Dark Crown", pre: "☠︎༒ ", post: " ༒☠︎", cat: "gothic" },
+            { name: "Royal Frame", pre: "♔〘 ", post: " 〙♔", cat: "royal" },
+            { name: "Neon Bracket", pre: "⚡【 ", post: " 】⚡", cat: "neon" },
+            { name: "Luxury VIP", pre: "♛ ", post: " ♛", cat: "luxury" },
+            { name: "TikTok Vibe", pre: "✨ ", post: " ✨", cat: "tiktok" },
+            { name: "Insta Bio", pre: "ıllıllı ", post: " ıllıllı", cat: "instagram" },
+            { name: "Dark Vibe", pre: "⛓️ ☠︎ ", post: " ☠︎ ⛓️", cat: "gothic" },
+            { name: "Toxic Phonk", pre: "🎧 ıllıllı ", post: " ıllıllı 🎧", cat: "tiktok" },
+            { name: "Fruit Story", pre: "🍓✨ ", post: " ✨🍎", cat: "cute" },
+            { name: "Void Bug", pre: "【404】 👾 ", post: " 👾 【404】", cat: "hacker" },
+            { name: "Y2K Star", pre: "✮⋆˙ ", post: " ˙⋆✮", cat: "aesthetic" },
+            { name: "Old Money", pre: "⚜️ ", post: " ⚜️", cat: "luxury" }
+        ];
+
+        let STYLES_DB = [];
+        let idCounter = 1;
+
+        Object.keys(ALPHABETS).forEach(fontKey => {
+            WRAPPERS.forEach(wrap => {
+                let cat = wrap.cat;
+                if(fontKey.includes('Gothic')) cat = 'gothic';
+                if(fontKey.includes('mono')) cat = 'hacker';
+                
+                STYLES_DB.push({
+                    id: idCounter++,
+                    name: `${fontKey} ${wrap.name}`.replace(/([A-Z])/g, ' $1').trim(),
+                    font: fontKey,
+                    pre: wrap.pre,
+                    post: wrap.post,
+                    cat: cat
+                });
+            });
+        });
+
+        const SYMBOLS_DB = {
+            "Stars & Sparkles": ["★", "☆", "✦", "✧", "✩", "✪", "✫", "✬", "✭", "✮", "✯", "✰", "⁂", "⁎", "⁑", "⚡", "✨", "☄️", "🪐"],
+            "Brackets & Borders": ["「", "」", "『", "』", "【", "】", "〘", "〙", "《", "》", "〚", "〛", "［", "］", "㋡", "㋛"],
+            "Crosses & Crowns": ["♔", "♕", "♖", "♗", "♘", "♙", "♚", "♛", "♜", "♝", "♞", "♟", "☩", "☨", "☦", "✙", "✚", "✛", "✜", "✝", "✞", "✟", "†", "𝔖"],
+            "Kaomoji & Faces": ["(•‿•)", "(ㆁωㆁ)", "(✿^‿^)", "( ╹▽╹ )", "(ʘᴗʘ✿)", "¯\\_(ツ)_/¯", "(╯°□°）╯︵ ┻━┻", "ʕ•ᴥ•ʔ", "V●ᴥ●V", "( ˘ ³˘)♥"],
+            "Decorators": ["•°¤*(¯`★´¯)*¤°•", "✉✍✈☠☣", "₪۩۞۩₪", "✖‿✖", "【】—", "✨💎✨", "⚡☠⚡", "⛓️💥⛓️"]
+        };
+
+        /* --- 2. STATE & STORAGE MANAGEMENT --- */
+        let activeTab = 'styles';
+        let activeCategory = 'all';
+        let searchQuery = '';
+        let favorites = JSON.parse(localStorage.getItem('void_favs') || '[]');
+        let defaultInput = "FROG X LIGHT";
+        let activeCanvasTheme = 0;
+
+        const mainInput = document.getElementById('mainInput');
+        mainInput.value = defaultInput;
+
+        function saveFavs() {
+            localStorage.setItem('void_favs', JSON.stringify(favorites));
+            document.getElementById('favCount').innerText = favorites.length;
+        }
+
+        /* --- 3. RENDER LOGIC WITH WHATSAPP SHARE ADDON --- */
+        function updateCounters() {
+            const txt = mainInput.value;
+            document.getElementById('charCount').innerText = txt.length;
+            document.getElementById('wordCount').innerText = txt.trim() === '' ? 0 : txt.trim().split(/\s+/).length;
+        }
+
+        function mapText(text, fontKey) {
+            const targetMap = ALPHABETS[fontKey];
+            if(!targetMap) return text;
+            
+            return [...text].map(char => {
+                const idx = CHARS_NORMAL.indexOf(char);
+                return idx !== -1 ? targetMap[idx] : char;
+            }).join('');
+        }
+
+        function shareToWhatsApp(text) {
+            const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        }
+
+        function renderStyles() {
+            const grid = document.getElementById('stylesGrid');
+            const rawText = mainInput.value || "Preview";
+            grid.innerHTML = '';
+
+            const filtered = STYLES_DB.filter(item => {
+                const matchesCat = activeCategory === 'all' || item.cat === activeCategory;
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.cat.includes(searchQuery.toLowerCase());
+                return matchesCat && matchesSearch;
+            });
+
+            document.getElementById('resultsMeta').innerText = `Showing ${filtered.length} styles`;
+
+            filtered.forEach(item => {
+                const stylized = item.pre + mapText(rawText, item.font) + item.post;
+                const isFav = favorites.includes(item.id);
+
+                const card = document.createElement('div');
+                card.className = 'style-card';
+                card.innerHTML = `
+                    <div class="card-meta">
+                        <span class="style-name">${item.name}</span>
+                        <div class="card-actions">
+                            <i class="fa-brands fa-whatsapp action-ico wa-share" onclick="shareToWhatsApp('${stylized.replace(/'/g, "\\'")}'); event.stopPropagation();" title="Share via WhatsApp"></i>
+                            <i class="fa-solid fa-heart action-ico ${isFav ? 'fav-active' : ''}" onclick="toggleFav(${item.id}); event.stopPropagation();" title="Favorite"></i>
+                            <i class="fa-solid fa-image action-ico" onclick="openExportModal('${stylized.replace(/'/g, "\\'")}'); event.stopPropagation();" title="Export Image"></i>
+                        </div>
+                    </div>
+                    <div class="rendered-text" onclick="copyText('${stylized.replace(/'/g, "\\'")}')">${stylized}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderSymbols() {
+            const catContainer = document.getElementById('symCategories');
+            const grid = document.getElementById('symbolsGrid');
+            catContainer.innerHTML = '';
+            grid.innerHTML = '';
+
+            Object.keys(SYMBOLS_DB).forEach((catName, idx) => {
+                const pill = document.createElement('div');
+                pill.className = `cat-pill ${idx === 0 ? 'active' : ''}`;
+                pill.innerText = catName;
+                pill.onclick = () => {
+                    document.querySelectorAll('#symCategories .cat-pill').forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active');
+                    populateSymGrid(catName);
+                };
+                catContainer.appendChild(pill);
+            });
+
+            populateSymGrid(Object.keys(SYMBOLS_DB)[0]);
+
+            function populateSymGrid(cat) {
+                grid.innerHTML = '';
+                SYMBOLS_DB[cat].forEach(sym => {
+                    const btn = document.createElement('div');
+                    btn.className = 'sym-btn';
+                    btn.style.fontSize = sym.length > 2 ? '0.9rem' : '1.5rem';
+                    btn.style.gridColumn = sym.length > 5 ? 'span 3' : 'auto';
+                    btn.innerText = sym;
+                    btn.onclick = () => copyText(sym);
+                    grid.appendChild(btn);
+                });
+            }
+        }
+
+        function renderFavs() {
+            const grid = document.getElementById('favsGrid');
+            const rawText = mainInput.value || "Preview";
+            grid.innerHTML = '';
+
+            if(favorites.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; color:var(--text-muted)">No favorites saved yet. Click the heart icon on any style!</div>`;
+                return;
+            }
+
+            STYLES_DB.filter(item => favorites.includes(item.id)).forEach(item => {
+                const stylized = item.pre + mapText(rawText, item.font) + item.post;
+                const card = document.createElement('div');
+                card.className = 'style-card';
+                card.innerHTML = `
+                    <div class="card-meta">
+                        <span class="style-name">${item.name}</span>
+                        <div class="card-actions">
+                            <i class="fa-brands fa-whatsapp action-ico wa-share" onclick="shareToWhatsApp('${stylized.replace(/'/g, "\\'")}'); event.stopPropagation();" title="Share via WhatsApp"></i>
+                            <i class="fa-solid fa-trash action-ico" onclick="toggleFav(${item.id}); renderFavs();" title="Remove"></i>
+                        </div>
+                    </div>
+                    <div class="rendered-text" onclick="copyText('${stylized.replace(/'/g, "\\'")}')">${stylized}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        /* --- 4. UI INTERACTION HANDLERS --- */
+        mainInput.addEventListener('input', () => {
+            updateCounters();
+            if(activeTab === 'styles') renderStyles();
+            if(activeTab === 'favs') renderFavs();
+        });
+
+        document.getElementById('searchStyles').addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderStyles();
+        });
+
+        function setupCategoryPills() {
+            const container = document.getElementById('categoryPills');
+            const cats = ['all', 'sigma', 'alpha', 'gaming', 'tiktok', 'instagram', 'gothic', 'hacker', 'cute', 'royal', 'luxury'];
+            
+            cats.forEach(c => {
+                const pill = document.createElement('div');
+                pill.className = `cat-pill ${c === 'all' ? 'active' : ''}`;
+                pill.innerText = c.toUpperCase();
+                pill.onclick = () => {
+                    document.querySelectorAll('#categoryPills .cat-pill').forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active');
+                    activeCategory = c;
+                    renderStyles();
+                };
+                container.appendChild(pill);
+            });
+        }
+
+        function switchTab(tabId) {
+            activeTab = tabId;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            
+            const targetedTab = Array.from(document.querySelectorAll('.tab')).find(t => t.getAttribute('onclick').includes(tabId));
+            if(targetedTab) targetedTab.classList.add('active');
+
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById(`view-${tabId}`).classList.add('active');
+
+            if(tabId === 'styles') renderStyles();
+            if(tabId === 'symbols') renderSymbols();
+            if(tabId === 'favs') renderFavs();
+        }
+
+        function toggleFav(id) {
+            if(favorites.includes(id)) favorites = favorites.filter(f => f !== id);
+            else favorites.push(id);
+            saveFavs();
+            if(activeTab === 'styles') renderStyles();
+        }
+
+        async function copyText(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast("Copied to clipboard!");
+            } catch(e) {
+                const ta = document.createElement('textarea');
+                ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+                showToast("Copied to clipboard!");
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function clearText() { mainInput.value = ''; mainInput.focus(); updateCounters(); renderStyles(); }
+        async function pasteText() {
+            try { mainInput.value = await navigator.clipboard.readText(); updateCounters(); renderStyles(); } catch(e){}
+        }
+        function insertInvisible() { copyText('\u3164'); showToast("Blank character copied!"); }
+        function randomizeText() {
+            const randomStyle = STYLES_DB[Math.floor(Math.random() * STYLES_DB.length)];
+            const stylized = randomStyle.pre + mapText(mainInput.value || "LUCKY", randomStyle.font) + randomStyle.post;
+            copyText(stylized);
+        }
+
+        /* --- 5. MINI TOOLS & ZALGO ENGINE --- */
+        function applyZalgoGlitch() {
+            let val = mainInput.value || "GLITCH";
+            const zalgoUp = ['̍', '̎', '̄', '̅', '̿', '̑', '̆', '̐', '͒', '͗', '͑', '̇', '̈', '̉', '̊', '̋', '̌'];
+            const zalgoDown = ['̖', '̗', '̘', '̙', '̜', '̟', '̠', '̤', '̥', '̦', '̩', '̪', '̫', '̬', '̭', '̮', '̯'];
+            let result = '';
+            
+            for (let char of val) {
+                result += char;
+                if(char !== ' ' && char !== '\n') {
+                    result += zalgoUp[Math.floor(Math.random() * zalgoUp.length)];
+                    result += zalgoDown[Math.floor(Math.random() * zalgoDown.length)];
+                }
+            }
+            copyText(result);
+        }
+
+        function runRepeater() {
+            const txt = document.getElementById('repText').value || mainInput.value;
+            const count = parseInt(document.getElementById('repCount').value) || 10;
+            const nl = document.getElementById('repNewline').checked ? '\n' : ' ';
+            copyText(Array(count).fill(txt).join(nl));
+        }
+
+        function convertCase(type) {
+            let val = mainInput.value;
+            if(!val) return;
+            if(type === 'upper') val = val.toUpperCase();
+            if(type === 'lower') val = val.toLowerCase();
+            if(type === 'title') val = val.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+            if(type === 'alt') val = [...val].map((c, i) => i % 2 === 0 ? c.toLowerCase() : c.toUpperCase()).join('');
+            if(type === 'inv') val = [...val].map(c => c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()).join('');
+            mainInput.value = val;
+            updateCounters();
+            renderStyles();
+            copyText(val);
+        }
+
+        function applyCustomWings() {
+            const l = document.getElementById('wingLeft').value;
+            const r = document.getElementById('wingRight').value;
+            mainInput.value = `${l} ${mainInput.value} ${r}`;
+            updateCounters();
+            renderStyles();
+            switchTab('styles');
+        }
+
+        /* --- 6. ADVANCED NATIVE CANVAS IMAGE EXPORTER (LIGHT ACCENTS) --- */
+        let activeExportText = '';
+        const canvasGradients = [
+            { bgStart: '#ffffff', bgEnd: '#f1f5f9', accent: 'rgba(138,43,226,0.08)', secondary: 'rgba(0,168,255,0.08)', text: '#1e293b' }, 
+            { bgStart: '#fff5f5', bgEnd: '#fed7d7', accent: 'rgba(255,0,127,0.08)', secondary: 'rgba(138,43,226,0.08)', text: '#742a2a' }, 
+            { bgStart: '#f0fff4', bgEnd: '#c6f6d5', accent: 'rgba(0,179,74,0.06)', secondary: 'rgba(0,168,255,0.06)', text: '#22543d' }  
+        ];
+
+        function openExportModal(text) {
+            activeExportText = text;
+            document.getElementById('exportModal').style.display = 'flex';
+            drawExportCanvas();
+        }
+        function closeModal() { document.getElementById('exportModal').style.display = 'none'; }
+
+        function changeCanvasTheme(index, element) {
+            activeCanvasTheme = index;
+            document.querySelectorAll('.theme-dot').forEach(dot => dot.classList.remove('active'));
+            element.classList.add('active');
+            drawExportCanvas();
+        }
+
+        function drawExportCanvas() {
+            const cvs = document.getElementById('renderCanvas');
+            const ctx = cvs.getContext('2d');
+            const theme = canvasGradients[activeCanvasTheme];
+            
+            // Base Background Color
+            const grad = ctx.createLinearGradient(0, 0, 800, 400);
+            grad.addColorStop(0, theme.bgStart); grad.addColorStop(1, theme.bgEnd);
+            ctx.fillStyle = grad; ctx.fillRect(0, 0, 800, 400);
+
+            // Light Ambient Glow Background Objects
+            ctx.beginPath(); ctx.arc(120, 100, 160, 0, Math.PI*2); ctx.fillStyle = theme.accent; ctx.fill();
+            ctx.beginPath(); ctx.arc(680, 300, 190, 0, Math.PI*2); ctx.fillStyle = theme.secondary; ctx.fill();
+
+            // Premium Inner Card Frame Line
+            ctx.strokeStyle = 'rgba(0,0,0,0.05)'; ctx.lineWidth = 2; ctx.strokeRect(25, 25, 750, 350);
+
+            // Core Typography Header Structure
+            ctx.fillStyle = theme.text; ctx.font = 'bold 40px Outfit, sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.shadowColor = 'rgba(0,0,0,0.03)';
+            ctx.shadowBlur = 10;
+            
+            let displayTxt = activeExportText.length > 28 ? activeExportText.substring(0,28)+'...' : activeExportText;
+            ctx.fillText(displayTxt, 400, 200);
+
+            // Metadata Branding Line Array
+            ctx.shadowBlur = 0; ctx.fillStyle = '#9ca3af'; ctx.font = '600 14px Fira Code, monospace';
+            ctx.fillText("GENERATED VIA FROG X STUDIO PRO", 400, 340);
+        }
+
+        function downloadCanvas() {
+            const link = document.createElement('a');
+            link.download = `FROG_X_LIGHT_STYLE_${Date.now()}.png`;
+            link.href = document.getElementById('renderCanvas').toDataURL();
+            link.click();
+            closeModal();
+        }
+
+        /* --- 7. BACKGROUND AMBIENT PARTICLES (LIGHT CONTRAST) --- */
+        const cvsBg = document.getElementById('canvas-bg');
+        const ctxBg = cvsBg.getContext('2d');
+        let pts = [];
+
+        function resizeBg() { cvsBg.width = window.innerWidth; cvsBg.height = window.innerHeight; }
+        window.addEventListener('resize', resizeBg); resizeBg();
+
+        for(let i=0; i<45; i++) pts.push({ x: Math.random()*cvsBg.width, y: Math.random()*cvsBg.height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5 });
+
+        function animateBg() {
+            ctxBg.clearRect(0, 0, cvsBg.width, cvsBg.height);
+            ctxBg.fillStyle = 'rgba(0,0,0,0.06)';
+            ctxBg.strokeStyle = 'rgba(138,43,226,0.04)';
+
+            for(let i=0; i<pts.length; i++) {
+                let p = pts[i]; p.x += p.vx; p.y += p.vy;
+                if(p.x < 0 || p.x > cvsBg.width) p.vx *= -1;
+                if(p.y < 0 || p.y > cvsBg.height) p.vy *= -1;
+
+                ctxBg.beginPath(); ctxBg.arc(p.x, p.y, 1.5, 0, Math.PI*2); ctxBg.fill();
+
+                for(let j=i+1; j<pts.length; j++) {
+                    let p2 = pts[j]; let dist = Math.hypot(p.x-p2.x, p.y-p2.y);
+                    if(dist < 110) { ctxBg.lineWidth = 1 - (dist/110); ctxBg.beginPath(); ctxBg.moveTo(p.x, p.y); ctxBg.lineTo(p2.x, p2.y); ctxBg.stroke(); }
+                }
+            }
+            requestAnimationFrame(animateBg);
+        }
+
+        /* --- 8. DYNAMIC SINGLE FILE PWA STACKS (STABLE PHONE INSTALL) --- */
+        const manifestJSON = {
+            name: "FROG X Text Studio Pro", short_name: "FROG X Pro", start_url: ".", display: "standalone",
+            background_color: "#f3f4f6", theme_color: "#f3f4f6",
+            icons: [{ src: "https://files.catbox.moe/4mefuj.png", sizes: "512x512", type: "image/png" }]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifestJSON)], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        const manifestLink = document.createElement('link'); manifestLink.rel = 'manifest'; manifestLink.href = manifestURL;
+        document.head.appendChild(manifestLink);
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); deferredPrompt = e;
+            const installBtn = document.getElementById('installPWA');
+            installBtn.style.display = 'flex'; // Shows mobile icon inside header top right
+            
+            installBtn.onclick = () => { 
+                deferredPrompt.prompt(); 
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        installBtn.style.display = 'none';
+                    }
+                });
+            };
+        });
+
+        /* --- INIT STUDIO APPLICATION --- */
+        window.onload = () => {
+            setupCategoryPills();
+            saveFavs();
+            updateCounters();
+            renderStyles();
+            animateBg();
+            setTimeout(() => {
+                const sp = document.getElementById('splash');
+                sp.style.opacity = 0;
+                setTimeout(() => sp.remove(), 500);
+            }, 600);
+        };
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
+        }
+    </script>
+</body>
+</html>
