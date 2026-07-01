@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FROG X Text Style Studio Pro (Ultimate Edition)</title>
+    <meta name="description" content="Premium Glassmorphism Text Generator, Decorator & Font Engine">
+    <meta name="theme-color" content="#0d0e15">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-base: #090a0f;
+            --neon-purple: #9d4edd;
+            --neon-green: #00ff66;
+            --neon-blue: #00b4d8;
+            --glass-bg: rgba(17, 19, 31, 0.85);
+            --glass-border: rgba(157, 78, 221, 0.15);
+            --glass-hover: rgba(157, 78, 221, 0.25);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --font-ui: 'Outfit', sans-serif;
+            --font-code: 'Fira Code', monospace;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+        ::-webkit-scrollbar-thumb { background: rgba(157, 78, 221, 0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-purple); }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Ambient Cyber Glow Effects */
+        body::before, body::after {
+            content: ''; position: fixed; width: 50vw; height: 50vw; border-radius: 50%; filter: blur(160px); z-index: -2; opacity: 0.15; pointer-events: none;
+        }
+        body::before { background: var(--neon-purple); top: -10%; left: -10%; }
+        body::after { background: var(--neon-green); bottom: -10%; right: -10%; }
+
+        #canvas-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+
+        .app-shell { max-width: 1280px; margin: 0 auto; padding: 16px 14px 80px; }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center; padding: 16px 20px;
+            background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); border-radius: 16px; margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .brand { display: flex; align-items: center; gap: 12px; font-weight: 900; font-size: 1.35rem; letter-spacing: -0.5px; }
+        .brand span { background: linear-gradient(135deg, var(--neon-green), var(--neon-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .badge { font-size: 0.65rem; background: rgba(0,255,102,0.1); border: 1px solid var(--neon-green); padding: 3px 8px; border-radius: 20px; font-family: var(--font-code); color: var(--neon-green); }
+
+        /* Hero Input Section */
+        .hero-panel {
+            background: var(--glass-bg); backdrop-filter: blur(24px); border: 1px solid var(--glass-border);
+            border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); margin-bottom: 20px; position: sticky; top: 12px; z-index: 100;
+        }
+
+        .input-wrapper { position: relative; width: 100%; }
+        textarea#mainInput {
+            width: 100%; height: 85px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
+            border-radius: 12px; padding: 14px; color: var(--text-main); font-size: 1.25rem; font-family: var(--font-ui); font-weight: 600;
+            resize: none; outline: none; transition: all 0.3s;
+        }
+        textarea#mainInput:focus { border-color: var(--neon-green); box-shadow: 0 0 15px rgba(0,255,102,0.15); }
+
+        .live-counter-bar {
+            display: flex; justify-content: flex-end; gap: 14px; font-size: 0.8rem; color: var(--text-muted);
+            margin-top: 6px; padding: 0 4px; font-family: var(--font-code);
+        }
+
+        .quick-toolbar { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; flex-wrap: wrap; gap: 10px; }
+        .tools-left, .tools-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap;}
+        
+        .btn-sm {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); color: var(--text-muted);
+            padding: 8px 14px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-sm:hover { color: var(--text-main); background: var(--glass-hover); border-color: var(--neon-purple); }
+        .btn-glow { background: linear-gradient(135deg, var(--neon-purple), #5a189a); color: #fff; border: none; box-shadow: 0 4px 15px rgba(157,78,221,0.3); }
+        .btn-glow:hover { box-shadow: 0 6px 20px rgba(157,78,221,0.5); transform: scale(1.02); }
+
+        /* Navigation Tabs */
+        .nav-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 20px; scrollbar-width: none; }
+        .nav-tabs::-webkit-scrollbar { display: none; }
+        .tab {
+            padding: 10px 18px; background: rgba(255,255,255,0.02); border: 1px solid transparent; border-radius: 12px;
+            color: var(--text-muted); font-weight: 600; font-size: 0.9rem; white-space: nowrap; cursor: pointer; transition: all 0.2s;
+        }
+        .tab.active { background: rgba(157, 78, 221, 0.15); border-color: var(--neon-purple); color: var(--neon-purple); text-shadow: 0 0 8px rgba(157,78,221,0.6); }
+
+        /* Filter Pills */
+        .filter-section { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .search-box { flex: 1; min-width: 240px; position: relative; }
+        .search-box i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+        .search-box input {
+            width: 100%; height: 44px; background: var(--glass-bg); border: 1px solid var(--glass-border);
+            border-radius: 12px; padding: 0 16px 0 44px; color: var(--text-main); outline: none; font-family: var(--font-ui);
+        }
+        .search-box input:focus { border-color: var(--neon-purple); }
+
+        .cat-pills { display: flex; gap: 6px; overflow-x: auto; width: 100%; padding-bottom: 6px; scrollbar-width: none; }
+        .cat-pill { padding: 6px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 20px; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; transition: 0.2s; }
+        .cat-pill.active { background: var(--neon-purple); color: #fff; font-weight: 700; border-color: var(--neon-purple); }
+
+        /* Section Routing */
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeIn 0.3s ease; }
+
+        /* Dynamic Layout Grid */
+        .styles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+
+        .style-card {
+            background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px;
+            position: relative; display: flex; flex-direction: column; justify-content: space-between; min-height: 105px;
+            transition: all 0.2s; backdrop-filter: blur(16px);
+        }
+        .style-card:hover { transform: translateY(-2px); border-color: var(--neon-green); box-shadow: 0 8px 24px rgba(0,255,102,0.1); }
+        
+        .card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .style-name { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--neon-green); font-weight: 700; }
+        .card-actions { display: flex; gap: 10px; align-items: center; }
+        .action-ico { color: var(--text-muted); cursor: pointer; font-size: 0.95rem; padding: 2px; transition: color 0.2s; }
+        .action-ico:hover { color: var(--text-main); }
+        .action-ico.fav-active { color: #ff4757; }
+        .action-ico.wa-share { color: #25d366; }
+
+        .rendered-text { font-size: 1.2rem; word-break: break-all; color: var(--text-main); flex-grow: 1; display: flex; align-items: center; font-family: var(--font-ui); cursor: pointer; }
+
+        /* Unicode Vault */
+        .symbols-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); gap: 8px; }
+        .sym-btn {
+            height: 55px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; font-size: 1.35rem; cursor: pointer; transition: 0.2s; color: var(--text-main);
+        }
+        .sym-btn:hover { border-color: var(--neon-green); background: rgba(0,255,102,0.05); }
+
+        /* Advanced App Panels */
+        .tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 16px; }
+        .tool-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; }
+        .tool-card h3 { margin-bottom: 14px; font-size: 1.05rem; display: flex; align-items: center; gap: 10px; color: var(--neon-purple); }
+        .tool-field { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); padding: 12px; border-radius: 10px; color: var(--text-main); margin-bottom: 12px; outline: none; font-family: var(--font-ui); }
+        .tool-field:focus { border-color: var(--neon-purple); }
+
+        #toast {
+            position: fixed; bottom: 24px; right: 24px; background: #11131f; border: 1px solid var(--neon-green); color: #fff; padding: 12px 20px; border-radius: 12px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 12px; z-index: 1000; transform: translateY(150%); transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #toast.show { transform: translateY(0); }
+
+        #splash {
+            position: fixed; top:0; left:0; width:100%; height:100%; background: #06070a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease;
+        }
+        .loader-ring { width: 65px; height: 65px; border: 3px solid transparent; border-top-color: var(--neon-green); border-bottom-color: var(--neon-purple); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 640px) {
+            .hero-panel { padding: 14px; top: 6px; }
+            textarea#mainInput { font-size: 1.15rem; height: 75px; }
+            .styles-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="splash">
+        <div class="loader-ring"></div>
+        <h2 style="margin-top: 20px; font-weight: 800; letter-spacing: 3px; font-size: 0.85rem; color: #fff;">FROG X ENGINE ULTIMATE v3.5</h2>
+    </div>
+
+    <canvas id="canvas-bg"></canvas>
+
+    <div class="app-shell">
+        <header>
+            <div class="brand">
+                <i class="fa-solid fa-bolt" style="color: var(--neon-green);"></i>
+                <div>FROG X <span>STUDIO</span></div>
+                <div class="badge">PRO CORE</div>
+            </div>
+        </header>
+
+        <section class="hero-panel">
+            <div class="input-wrapper">
+                <textarea id="mainInput" placeholder="Type text payload here..."></textarea>
+            </div>
+            <div class="live-counter-bar">
+                <span>Buffer: <b id="charCount" style="color: var(--neon-blue);">0</b> Chars</span>
+                <span>Words: <b id="wordCount" style="color: var(--neon-purple);">0</b></span>
+            </div>
+            <div class="quick-toolbar">
+                <div class="tools-left">
+                    <button class="btn-sm" onclick="clearText()"><i class="fa-solid fa-trash-can"></i> Clear</button>
+                    <button class="btn-sm" onclick="pasteText()"><i class="fa-solid fa-paste"></i> Paste</button>
+                    <button class="btn-sm" onclick="insertInvisible()"><i class="fa-solid fa-ghost"></i> Blank Space</button>
+                </div>
+                <div class="tools-right">
+                    <button class="btn-sm btn-glow" onclick="randomizeText()"><i class="fa-solid fa-shuffle"></i> Randomize</button>
+                </div>
+            </div>
+        </section>
+
+        <nav class="nav-tabs">
+            <div class="tab active" onclick="switchTab('styles')"><i class="fa-solid fa-font"></i> Styles (500+)</div>
+            <div class="tab" onclick="switchTab('symbols')"><i class="fa-solid fa-icons"></i> Unicode Vault</div>
+            <div class="tab" onclick="switchTab('tools')"><i class="fa-solid fa-gears"></i> Utility Toolkit</div>
+            <div class="tab" onclick="switchTab('generators')"><i class="fa-solid fa-wand-magic-sparkles"></i> Creators</div>
+            <div class="tab" onclick="switchTab('favs')"><i class="fa-solid fa-star"></i> Saved (<span id="favCount">0</span>)</div>
+            <div class="tab" onclick="switchTab('history')"><i class="fa-solid fa-clock-rotate-left"></i> History Log</div>
+        </nav>
+
+        <div id="view-styles" class="view-section active">
+            <div class="filter-section">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="searchStyles" placeholder="Search layout schemes inside font matrix...">
+                </div>
+            </div>
+            <div class="cat-pills" id="categoryPills"></div>
+            <div style="margin: 12px 0 8px; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;" id="resultsMeta">Processing style layers...</div>
+            <div class="styles-grid" id="stylesGrid"></div>
+        </div>
+
+        <div id="view-symbols" class="view-section">
+            <div class="cat-pills" id="symCategories" style="margin-bottom:14px;"></div>
+            <div class="symbols-grid" id="symbolsGrid"></div>
+        </div>
+
+        <div id="view-tools" class="view-section">
+            <div class="tools-grid">
+                <div class="tool-card">
+                    <h3><i class="fa-solid fa-biohazard"></i> Zalgo Glitch Text</h3>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">Inject corrupted unicode entities directly into live buffer.</p>
+                    <button class="btn-sm btn-glow" style="width:100%; justify-content:center;" onclick="applyZalgoGlitch()">Inject Zalgo Corruption & Copy</button>
+                </div>
+                <div class="tool-card">
+                    <h3><i class="fa-solid fa-repeat"></i> Advanced Text Repeater</h3>
+                    <input type="text" id="repText" class="tool-field" placeholder="Target payload data...">
+                    <input type="number" id="repCount" class="tool-field" placeholder="Loop iterations count" value="50">
+                    <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">
+                        <input type="checkbox" id="repNewline" checked> Inject delimiter newlines
+                    </label>
+                    <button class="btn-sm btn-glow" style="width:100%; justify-content:center;" onclick="runRepeater()">Run Multiplication Node</button>
+                </div>
+                <div class="tool-card">
+                    <h3><i class="fa-solid fa-text-height"></i> Case Manipulator Node</h3>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <button class="btn-sm" onclick="convertCase('upper')">UPPERCASE</button>
+                        <button class="btn-sm" onclick="convertCase('lower')">lowercase</button>
+                        <button class="btn-sm" onclick="convertCase('title')">Title Case</button>
+                        <button class="btn-sm" onclick="convertCase('alt')">aLtErNaTe</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-generators" class="view-section">
+            <div class="tools-grid">
+                <div class="tool-card">
+                    <h3><i class="fa-solid fa-gamepad"></i> Gaming Nickname Architect</h3>
+                    <div style="display:flex; gap:8px; margin-bottom:12px;">
+                        <input type="text" id="nickInput" class="tool-field" style="margin:0;" placeholder="Seed name...">
+                        <button class="btn-sm btn-glow" onclick="buildNicknames()">Compile</button>
+                    </div>
+                    <div class="styles-grid" id="nickOutputGrid" style="grid-template-columns:1fr; gap:8px;"></div>
+                </div>
+                <div class="tool-card">
+                    <h3><i class="fa-solid fa-user-tag"></i> Structural Social Bio Schemes</h3>
+                    <button class="btn-sm btn-glow" style="width:100%; margin-bottom:12px;" onclick="generateBios()">Deploy Structural Bios Layouts</button>
+                    <div class="styles-grid" id="bioOutputGrid" style="grid-template-columns:1fr; gap:8px;"></div>
+                </div>
+                <div class="tool-card">
+                    <h3><i class="fa-solid fa-shuffle"></i> Emoji Combination Engine</h3>
+                    <div style="display:flex; gap:8px; margin-bottom:12px;">
+                        <input type="text" id="emoInput" class="tool-field" style="margin:0;" placeholder="Theme seed (dark, fire, love)...">
+                        <button class="btn-sm btn-glow" onclick="mixEmojis()">Combine</button>
+                    </div>
+                    <div id="emojiOutput" class="rendered-text" style="padding:12px; background:rgba(0,0,0,0.3); border-radius:10px; min-height:48px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-favs" class="view-section">
+            <div class="styles-grid" id="favsGrid"></div>
+        </div>
+
+        <div id="view-history" class="view-section">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <div style="font-size:0.9rem; color:var(--text-muted);">Session Clipboard Dumps Log</div>
+                <button class="btn-sm" onclick="clearHistory()"><i class="fa-solid fa-eraser"></i> Flush Core Registers</button>
+            </div>
+            <div class="styles-grid" id="historyGrid" style="grid-template-columns:1fr; gap:8px;"></div>
+        </div>
+    </div>
+
+    <div id="toast"><i class="fa-solid fa-circle-check" style="color:var(--neon-green)"></i> <span id="toastMsg">Sync Successful</span></div>
+
+    <script>
+        /* --- BUG-FREE FIXED FONT MAP REGISTRIES --- */
+        const CHARS_NORMAL = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        
+        // Fully Calibrated 1-to-1 Unicode Array Maps 
+        const FIXED_ALPHABETS = {
+            mono: "𝚊𝚋𝚌𝚍𝚎𝚏𝚐𝚑𝚒𝚓𝚔𝚕𝚖𝚗𝚘𝚙𝚚𝚛𝚜𝚝𝚞𝚟𝚠𝚡𝚢𝚣𝙰𝙱𝙲𝙳𝙴𝙵𝙶𝙷𝙸𝙹𝙺𝙻𝙼𝙽𝙾𝙿𝚀𝚁𝚂𝚃𝚄𝚅𝚆𝚇𝚈𝚉𝟶𝟷𝟸𝟹𝟺𝟻𝟼𝟽𝟾𝟿",
+            bold: "𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝚉𝚨𝚩𝚪𝚫𝚬𝚭𝚮𝚯𝚰𝚱𝚲𝚳𝚴𝚵𝚶𝚷𝚸𝚹𝚺𝚻𝚼𝚽𝚾𝚿𝛀𝟎𝟏𝟐𝟑𝟒𝟓𝟔𝟕𝟖𝟗",
+            italic: "𝘢𝘣𝘤𝘥𝘦𝘧𝘨𝘩𝘪𝘫𝘬𝘭𝘮𝘯𝘰𝘱𝘲𝘳𝘴𝘵𝘶𝘷𝘸𝘹𝘺𝘻𝘈𝘉𝘊𝘋𝘌𝘍𝘎𝘏𝘐𝘑𝘒𝘓𝘔𝘕𝘖𝘗𝘘𝘙𝘚𝘛𝘜𝘝𝘞𝘟𝘠𝘡0123456789",
+            boldItalic: "𝒂𝒃𝒄𝒅𝒆𝒇𝒈𝒉𝒊𝒋𝒌𝒍𝒎𝒏𝒐𝒑𝒒𝒓𝒔𝒕𝒖𝒗𝒘𝒙𝒚𝒛𝑨𝑩𝑪𝑫𝑬𝑭𝑮𝑯𝑰𝑱𝑲𝑳𝑴𝑵𝑶𝑷𝑸𝑹𝑺𝑻𝑼𝑽𝑾𝑿𝒀𝒁0123456789",
+            script: "𝒶𝒷𝒸𝒹𝑒𝒻𝑔𝒽𝒾𝒿𝓀𝓁𝓂𝓃𝑜𝓅𝓆𝓇𝓈𝓉𝓊𝓋𝓌𝓍𝓎𝓏𝒜ℬ𝒞𝒟ℰℱ𝒢ℋℐ𝒥𝒦ℒℳ𝒩𝒪𝒫𝒬ℛ𝒮𝒯𝒰𝒱𝒲𝒳𝒴𝒵0123456789",
+            gothic: "𝔞𝔟𝔠𝔡𝔢𝔣𝔤𝔥𝔦𝔧𝔨𝔩𝔪𝔫𝔬𝔭𝔮𝔯𝔰𝔱𝔲𝔳𝔴𝔵𝔶𝔷𝔄𝔅ℭ𝔇𝔈𝔉𝔊𝔏 stashℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔𝔕𝔖𝔗𝔘𝔙𝔚𝔜𝔜𝔁0123456789",
+            doubleStruck: "𝕒𝕓𝕔𝕕𝕖𝕗𝕘𝕙𝕚𝕛𝕜𝕝𝕞𝕟𝕠𝕡𝕢𝕣𝕤𝕥𝕦𝕧𝕨𝕩𝕪𝕫𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ𝕀𝕁𝕂𝕃𝕄ℕ𝕆ℙℚℝ𝕊𝕋𝕌𝕍𝕎𝕏𝕐ℤ0123456789",
+            bubble: "ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ①②③④⑤⑥⑦⑧⑨⓪",
+            smallCaps: "ᴀʙᴄᴅᴇғɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢAʙCᴅEғGʜIᴊKʟMɴOᴘQʀSᴛUᴠW𝖷𝖸𝖹0123456789"
+        };
+
+        const WRAPPERS = [
+            { name: "Plain Core", pre: "", post: "", cat: "aesthetic" },
+            { name: "Sigma Construct", pre: "🗿 「 ", post: " 」 🗿", cat: "sigma" },
+            { name: "Alpha Shell", pre: "『⚡ ", post: " ⚡』", cat: "alpha" },
+            { name: "Terminal Entry", pre: "[root@void:~]$ ", post: "", cat: "hacker" },
+            { name: "Sniper Strobe", pre: "★彡[ ", post: " ]彡★", cat: "gaming" },
+            { name: "Angel Vector", pre: "꧁•⊹٭ ", post: " ٭⊹•꧂", cat: "cute" },
+            { name: "Gothic Spire", pre: "☠︎༒ ", post: " ༒☠︎", cat: "gothic" },
+            { name: "Royal Seal", pre: "♔〘 ", post: " 〙♔", cat: "royal" },
+            { name: "Neon Matrix", pre: "⚡【 ", post: " 】⚡", cat: "neon" },
+            { name: "TikTok Hype", pre: "✨ ", post: " ✨", cat: "tiktok" },
+            { name: "Insta Stream", pre: "ıllıllı ", post: " ıllıllı", cat: "instagram" },
+            { name: "Void Endpoint", pre: "【404】 👾 ", post: " 👾 【404】", cat: "hacker" },
+            { name: "Aesthetic Core", pre: "✮⋆˙ ", post: " ˙⋆✮", cat: "aesthetic" },
+            { name: "Imperial Cross", pre: "🛡️ 𓆩", post: "𓆪 🛡️", cat: "royal" },
+            { name: "Slayer Node", pre: "╰𓆚 ", post: " 𓆚╯", cat: "gaming" },
+            { name: "Vanguard Unit", pre: "𓊈 ", post: " 𓊉", cat: "royal" },
+            { name: "Lethal Grid", pre: "☣️ ╳ ", post: " ╳ ☣️", cat: "hacker" },
+            { name: "Thorn Engine", pre: "𓌹☠︎𓌺 ", post: " 𓌹☠︎𓌺", cat: "gothic" },
+            { name: "Alpha Leader", pre: "🔥 𓅓 ", post: " 𓅓 🔥", cat: "alpha" }
+        ];
+
+        let STYLES_DB = [];
+        let idCounter = 1;
+
+        // Core Matrix Setup
+        Object.keys(FIXED_ALPHABETS).forEach(fontKey => {
+            for (let i = 0; i < 30; i++) {
+                let wrap = WRAPPERS[i % WRAPPERS.length];
+                let cat = wrap.cat;
+                if(fontKey.includes('gothic')) cat = 'gothic';
+                if(fontKey.includes('mono')) cat = 'hacker';
+                
+                STYLES_DB.push({
+                    id: idCounter++,
+                    name: `${fontKey} layout variant ${i+1}`,
+                    font: fontKey,
+                    pre: wrap.pre + (i > WRAPPERS.length ? "彡" : ""),
+                    post: (i > WRAPPERS.length ? "彡" : "") + wrap.post,
+                    cat: cat
+                });
+            }
+        });
+
+        const SYMBOLS_DB = {
+            "Stars & Flares": ["★", "☆", "✦", "✧", "✩", "✪", "⚡", "✨", "🪐", "☄️"],
+            "Brackets Node": ["「", "」", "『", "』", "【", "】", "𓊈", "𓊉", "⚔️", "⛓️"],
+            "Crowns Base": ["♔", "♕", "♖", "♗", "♚", "♛", "☠︎", "☣️", "⚜️", "𓋹"],
+            "Kaomoji Units": ["(•‿•)", "(ㆁωㆁ)", "¯\\_(ツ)_/¯", "𓆩𓆪", "𓅓", "𓆚"]
+        };
+
+        const EMOJI_POOL = {
+            dark: ["🖤", "💀", "⛓️", "☠︎", "🩸", "🕸️"],
+            fire: ["🔥", "💥", "⚡", "☄️", "🌋"],
+            love: ["❤️", "💖", "💘", "🌸", "🧸"],
+            gaming: ["🎮", "🕹️", "⚔️", "🛡️", "👾"]
+        };
+
+        /* --- STATE SYSTEM REGISTRIES --- */
+        let activeTab = 'styles';
+        let activeCategory = 'all';
+        let searchQuery = '';
+        let favorites = JSON.parse(localStorage.getItem('frog_favs_v3') || '[]');
+        let copyHistory = JSON.parse(localStorage.getItem('frog_hist_v3') || '[]');
+        let defaultInput = "CHALANA";
+
+        const mainInput = document.getElementById('mainInput');
+        mainInput.value = defaultInput;
+
+        function saveFavs() {
+            localStorage.setItem('frog_favs_v3', JSON.stringify(favorites));
+            document.getElementById('favCount').innerText = favorites.length;
+        }
+
+        function logHistory(text) {
+            if(!copyHistory.includes(text)) {
+                copyHistory.unshift(text);
+                if(copyHistory.length > 25) copyHistory.pop();
+                localStorage.setItem('frog_hist_v3', JSON.stringify(copyHistory));
+            }
+        }
+
+        function clearHistory() { copyHistory = []; localStorage.setItem('frog_hist_v3', JSON.stringify([])); renderHistory(); }
+
+        /* --- ACCURATE RENDERING SCHEMES --- */
+        function updateCounters() {
+            const txt = mainInput.value;
+            document.getElementById('charCount').innerText = txt.length;
+            document.getElementById('wordCount').innerText = txt.trim() === '' ? 0 : txt.trim().split(/\s+/).length;
+        }
+
+        // Strict CodePoint Mapper (Fully fixes letter mismatch bug)
+        function mapText(text, fontKey) {
+            const targetAlphabet = FIXED_ALPHABETS[fontKey];
+            if (!targetAlphabet) return text;
+
+            const codePoints = Array.from(targetAlphabet);
+            let output = "";
+
+            for (let char of text) {
+                let index = CHARS_NORMAL.indexOf(char);
+                if (index !== -1 && codePoints[index]) {
+                    output += codePoints[index];
+                } else {
+                    output += char;
+                }
+            }
+            return output;
+        }
+
+        function renderStyles() {
+            const grid = document.getElementById('stylesGrid');
+            const rawText = mainInput.value || "Preview Empty";
+            grid.innerHTML = '';
+
+            const filtered = STYLES_DB.filter(item => {
+                const matchesCat = activeCategory === 'all' || item.cat === activeCategory;
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.cat.includes(searchQuery.toLowerCase());
+                return matchesCat && matchesSearch;
+            });
+
+            document.getElementById('resultsMeta').innerText = `Deployed ${filtered.length} layout configurations`;
+
+            filtered.slice(0, 150).forEach(item => {
+                const stylized = item.pre + mapText(rawText, item.font) + item.post;
+                const isFav = favorites.includes(item.id);
+
+                const card = document.createElement('div');
+                card.className = 'style-card';
+                card.innerHTML = `
+                    <div class="card-meta">
+                        <span class="style-name">${item.cat} layout #${item.id}</span>
+                        <div class="card-actions">
+                            <i class="fa-brands fa-whatsapp action-ico wa-share" onclick="shareWA('${stylized.replace(/'/g, "\\'")}'); event.stopPropagation();"></i>
+                            <i class="fa-solid fa-star action-ico ${isFav ? 'fav-active' : ''}" onclick="toggleFav(${item.id}); event.stopPropagation();"></i>
+                        </div>
+                    </div>
+                    <div class="rendered-text" onclick="copyText('${stylized.replace(/'/g, "\\\\'")}')">${stylized}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderSymbols() {
+            const catContainer = document.getElementById('symCategories');
+            const grid = document.getElementById('symbolsGrid');
+            catContainer.innerHTML = ''; grid.innerHTML = '';
+
+            Object.keys(SYMBOLS_DB).forEach((catName, idx) => {
+                const pill = document.createElement('div');
+                pill.className = `cat-pill ${idx === 0 ? 'active' : ''}`;
+                pill.innerText = catName;
+                pill.onclick = () => {
+                    document.querySelectorAll('#symCategories .cat-pill').forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active');
+                    populateSymGrid(catName);
+                };
+                catContainer.appendChild(pill);
+            });
+            populateSymGrid(Object.keys(SYMBOLS_DB)[0]);
+        }
+
+        function populateSymGrid(cat) {
+            const grid = document.getElementById('symbolsGrid'); grid.innerHTML = '';
+            SYMBOLS_DB[cat].forEach(sym => {
+                const btn = document.createElement('div'); btn.className = 'sym-btn';
+                btn.innerText = sym; btn.onclick = () => copyText(sym);
+                grid.appendChild(btn);
+            });
+        }
+
+        function renderHistory() {
+            const grid = document.getElementById('historyGrid'); grid.innerHTML = '';
+            if(copyHistory.length === 0) { grid.innerHTML = '<div style="color:var(--text-muted); padding:10px;">Logs empty</div>'; return; }
+            copyHistory.forEach(txt => {
+                const card = document.createElement('div'); card.className = 'style-card'; card.style.minHeight = '55px';
+                card.innerHTML = `<div class="rendered-text" onclick="copyText('${txt.replace(/'/g, "\\'")}')">${txt}</div>`;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderFavs() {
+            const grid = document.getElementById('favsGrid'); const rawText = mainInput.value || "Preview"; grid.innerHTML = '';
+            const matched = STYLES_DB.filter(item => favorites.includes(item.id));
+            if(matched.length === 0) { grid.innerHTML = '<div style="color:var(--text-muted); padding:10px;">No saved targets found</div>'; return; }
+            matched.forEach(item => {
+                const stylized = item.pre + mapText(rawText, item.font) + item.post;
+                const card = document.createElement('div'); card.className = 'style-card';
+                card.innerHTML = `
+                    <div class="card-meta"><span class="style-name">${item.font}</span></div>
+                    <div class="rendered-text" onclick="copyText('${stylized.replace(/'/g, "\\'")}')">${stylized}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        /* --- INTERNAL CREATORS SYSTEM ENGINE --- */
+        function buildNicknames() {
+            const base = document.getElementById('nickInput').value || "VOID";
+            const grid = document.getElementById('nickOutputGrid'); grid.innerHTML = '';
+            const variants = [`☠︎𓊈${base}𓊉☠︎`, `⚡︎ 𓆩${base}𓆪 ⚡︎`, `👑 𓅓 ${base}`, `⚔️ ${base} ⚔️`];
+            variants.forEach(v => {
+                const div = document.createElement('div'); div.className = 'style-card'; div.style.minHeight = '50px';
+                div.innerHTML = `<div class="rendered-text" onclick="copyText('${v}')">${v}</div>`;
+                grid.appendChild(div);
+            });
+        }
+
+        function generateBios() {
+            const grid = document.getElementById('bioOutputGrid'); grid.innerHTML = '';
+            const sampleBios = [
+                "✦ ─── ❖ ─── ✦\n⚡︎ ALPHA ARCHITECT ⚡︎\n★ ─── ❖ ─── ★",
+                "𓌹☠︎𓌺 CYBER PROTOCOL 𓌹☠︎𓌺\n• Active Stress Tester 🌐\n• Node Operational 📈"
+            ];
+            sampleBios.forEach(b => {
+                const div = document.createElement('div'); div.className = 'style-card';
+                div.innerHTML = `<div class="rendered-text" style="white-space:pre-line;" onclick="copyText('${b.replace(/\n/g, '\\n')}')">${b}</div>`;
+                grid.appendChild(div);
+            });
+        }
+
+        function mixEmojis() {
+            const type = document.getElementById('emoInput').value.toLowerCase() || "dark";
+            const pool = EMOJI_POOL[type] || EMOJI_POOL['dark'];
+            let res = ''; for(let i=0; i<4; i++) res += pool[Math.floor(Math.random()*pool.length)];
+            document.getElementById('emojiOutput').innerText = res;
+            document.getElementById('emojiOutput').onclick = () => copyText(res);
+        }
+
+        /* --- CONTROLLER INTERFACE ROUTING --- */
+        mainInput.addEventListener('input', () => { updateCounters(); if(activeTab === 'styles') renderStyles(); });
+        document.getElementById('searchStyles').addEventListener('input', (e) => { searchQuery = e.target.value; renderStyles(); });
+
+        function switchTab(tabId) {
+            activeTab = tabId;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            const targetedTab = Array.from(document.querySelectorAll('.tab')).find(t => t.getAttribute('onclick').includes(tabId));
+            if(targetedTab) targetedTab.classList.add('active');
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById(`view-${tabId}`).classList.add('active');
+
+            if(tabId === 'styles') renderStyles();
+            if(tabId === 'symbols') renderSymbols();
+            if(tabId === 'favs') renderFavs();
+            if(tabId === 'history') renderHistory();
+        }
+
+        function toggleFav(id) {
+            if(favorites.includes(id)) favorites = favorites.filter(f => f !== id);
+            else favorites.push(id);
+            saveFavs(); renderStyles();
+        }
+
+        async function copyText(text) {
+            await navigator.clipboard.writeText(text);
+            showToast("Copied safely to system clipboard"); logHistory(text);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function shareWA(text) { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank'); }
+        function clearText() { mainInput.value = ''; updateCounters(); renderStyles(); }
+        async function pasteText() { mainInput.value = await navigator.clipboard.readText(); updateCounters(); renderStyles(); }
+        function insertInvisible() { copyText('\u3164'); showToast("Blank Char Cloned"); }
+        
+        function randomizeText() {
+            const randomStyle = STYLES_DB[Math.floor(Math.random() * STYLES_DB.length)];
+            const stylized = randomStyle.pre + mapText(mainInput.value || "RANDOM", randomStyle.font) + randomStyle.post;
+            copyText(stylized);
+        }
+
+        function applyZalgoGlitch() {
+            let val = mainInput.value || "GLITCH";
+            const zalgoUp = ['̍', '̎', '̄', '̅', '̿', '̑', '̆'];
+            const zalgoDown = ['̖', '̗', '̘', '̙', '̜', '̟', '̠'];
+            let result = '';
+            for (let char of val) {
+                result += char;
+                if(char !== ' ') {
+                    result += zalgoUp[Math.floor(Math.random() * zalgoUp.length)];
+                    result += zalgoDown[Math.floor(Math.random() * zalgoDown.length)];
+                }
+            }
+            copyText(result);
+        }
+
+        function runRepeater() {
+            const txt = document.getElementById('repText').value || mainInput.value;
+            const count = parseInt(document.getElementById('repCount').value) || 10;
+            const nl = document.getElementById('repNewline').checked ? '\n' : ' ';
+            copyText(Array(count).fill(txt).join(nl));
+        }
+
+        function convertCase(type) {
+            let val = mainInput.value;
+            if(type === 'upper') val = val.toUpperCase();
+            if(type === 'lower') val = val.toLowerCase();
+            if(type === 'title') val = val.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+            if(type === 'alt') val = [...val].map((c, i) => i % 2 === 0 ? c.toLowerCase() : c.toUpperCase()).join('');
+            mainInput.value = val; updateCounters(); renderStyles(); copyText(val);
+        }
+
+        function setupCategoryPills() {
+            const container = document.getElementById('categoryPills');
+            const cats = ['all', 'sigma', 'alpha', 'gaming', 'tiktok', 'gothic', 'hacker', 'cute', 'royal'];
+            cats.forEach(c => {
+                const pill = document.createElement('div'); pill.className = `cat-pill ${c === 'all' ? 'active' : ''}`;
+                pill.innerText = c.toUpperCase();
+                pill.onclick = () => {
+                    document.querySelectorAll('#categoryPills .cat-pill').forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active'); activeCategory = c; renderStyles();
+                };
+                container.appendChild(pill);
+            });
+        }
+
+        /* --- BACKGROUND PARTICLES UNIFIED --- */
+        const cvsBg = document.getElementById('canvas-bg'); const ctxBg = cvsBg.getContext('2d'); let pts = [];
+        function resizeBg() { cvsBg.width = window.innerWidth; cvsBg.height = window.innerHeight; }
+        window.addEventListener('resize', resizeBg); resizeBg();
+        for(let i=0; i<25; i++) pts.push({ x: Math.random()*cvsBg.width, y: Math.random()*cvsBg.height, vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4 });
+        function animateBg() {
+            ctxBg.clearRect(0, 0, cvsBg.width, cvsBg.height); ctxBg.fillStyle = 'rgba(157, 78, 221, 0.08)';
+            pts.forEach(p => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x < 0 || p.x > cvsBg.width) p.vx *= -1; if(p.y < 0 || p.y > cvsBg.height) p.vy *= -1;
+                ctxBg.beginPath(); ctxBg.arc(p.x, p.y, 1.2, 0, Math.PI*2); ctxBg.fill();
+            });
+            requestAnimationFrame(animateBg);
+        }
+
+        /* --- CONSOLE BOOTSTRAP --- */
+        window.onload = () => {
+            setupCategoryPills(); saveFavs(); updateCounters(); renderStyles(); animateBg();
+            setTimeout(() => {
+                const sp = document.getElementById('splash'); sp.style.opacity = 0; setTimeout(() => sp.remove(), 400);
+            }, 600);
+        };
+    </script>
+</body>
+</html>
